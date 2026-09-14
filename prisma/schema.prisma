@@ -1,0 +1,71 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum PaymentMethod {
+  CARD
+  BT
+  CASH
+}
+
+enum ControlType {
+  T
+  FF
+}
+
+model Order {
+  id        String @id @default(cuid())
+  jobNumber Int    @unique @default(autoincrement()) @map("job_number")
+
+  agentName String @map("agent_name")
+
+  customerName     String   @map("customer_name")
+  customerAddress  String   @map("customer_address")
+  customerPostcode String   @map("customer_postcode")
+  customerTel      String   @map("customer_tel")
+  customerMobile   String?  @map("customer_mobile")
+  orderDate        DateTime @default(now()) @map("order_date")
+
+  takeOldBlindsOff Boolean @default(false) @map("take_old_blinds_off")
+
+  measurerSignature String   @map("measurer_signature")
+  customerSignature String   @map("customer_signature")
+  signedAt          DateTime @default(now()) @map("signed_at")
+
+  depositAmountPence Int            @map("deposit_amount_pence")
+  totalAmountPence   Int            @map("total_amount_pence")
+  balanceDuePence    Int            @map("balance_due_pence")
+  paymentMethod      PaymentMethod? @map("payment_method")
+  fittingDate        DateTime?      @map("fitting_date")
+
+  rows MeasurementRow[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("orders")
+}
+
+model MeasurementRow {
+  id      String @id @default(cuid())
+  orderId String @map("order_id")
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  rowNumber Int    @map("row_number")
+  area      String
+  widthMm   Int    @map("width_mm")
+  dropMm    Int    @map("drop_mm")
+
+  chainCordControl String?      @map("chain_cord_control")
+  wandControl      String?      @map("wand_control")
+  control          ControlType?
+  comments         String?
+
+  @@index([orderId])
+  @@map("measurement_rows")
+}
